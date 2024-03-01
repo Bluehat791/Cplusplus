@@ -1,0 +1,1 @@
+/usr/bin/c++ "CMakeFiles/my-vector.dir/Two_sum.cpp.o" -o my-vector 

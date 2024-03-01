@@ -1,0 +1,3 @@
+/home/anatoliy/projects/C++/leetcode/isPalindrome/build/CMakeFiles/isPalindrome.dir
+/home/anatoliy/projects/C++/leetcode/isPalindrome/build/CMakeFiles/edit_cache.dir
+/home/anatoliy/projects/C++/leetcode/isPalindrome/build/CMakeFiles/rebuild_cache.dir
