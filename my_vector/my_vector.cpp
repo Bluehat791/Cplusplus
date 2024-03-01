@@ -1,5 +1,7 @@
 #include <memory>
 #include <iostream>
+
+
 template <typename T>
 class My_vector {
 private:
@@ -57,6 +59,7 @@ public:
         delete[] reinterpret_cast<int8_t*>(arr);
         arr = newarr;
         cap = n;
+        
     }
 
     void resize(size_t n, const T& value = T())
@@ -93,10 +96,10 @@ public:
         return arr[i];
     }
 
-    const T& operator[](size_t i)
+    /*const T& operator[](size_t i)
     {
         return arr[i];
-    }
+    }*/
 
     T& at(size_t i)
     {
