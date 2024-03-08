@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/anatoliy/projects/C++/my_vector/build",
-  "command": "/usr/bin/c++    -o CMakeFiles/my-vector.dir/my_vector.cpp.o -c /home/anatoliy/projects/C++/my_vector/my_vector.cpp",
-  "file": "/home/anatoliy/projects/C++/my_vector/my_vector.cpp"
-}
-]

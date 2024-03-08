@@ -1,3 +1,0 @@
-/home/anatoliy/projects/C++/my_vector/build/CMakeFiles/my-vector.dir
-/home/anatoliy/projects/C++/my_vector/build/CMakeFiles/edit_cache.dir
-/home/anatoliy/projects/C++/my_vector/build/CMakeFiles/rebuild_cache.dir
