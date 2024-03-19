@@ -4,6 +4,7 @@
 #include <utility>
 #include <stdexcept>
 #include <iterator>
+#include <cassert>
 
 template <typename T>
 class Iterator
@@ -150,6 +151,8 @@ public:
 
     size_t capacity();
 
+    AV_vector() = default;
+
     AV_vector(int size_m);
 
     AV_vector(size_t count, const T& value, const Alloc alloc = Alloc());
@@ -167,7 +170,11 @@ public:
 
     void pop_back();
 
+    T& operator[](size_t i) const;
+    T& operator[](int i) const;
+
     T& operator[](size_t i);
+    T& operator[](int i);
 
     T& at(size_t i);
 
@@ -179,6 +186,9 @@ public:
 
     iterator end() noexcept;
 
+
+
+    iterator erase(const_iterator pos) noexcept;
 
     const_iterator begin() const noexcept;
 
@@ -198,7 +208,7 @@ public:
 template<typename T, typename Alloc>
 size_t AV_vector<T, Alloc>::size()
 {
-    return size();
+    return sz;
 }
 
 template<typename T, typename Alloc>
@@ -209,12 +219,12 @@ size_t AV_vector<T, Alloc>::capacity()
 
 template<typename T, typename Alloc>
 AV_vector<T, Alloc>::AV_vector(int size_m) : arr(nullptr), sz(size_m)
-{   
-    std::uninitialized_value_construct_n(arr,size_m);
+{
+    std::uninitialized_value_construct_n(arr, size_m);
 }
 
 template<typename T, typename Alloc>
-AV_vector<T, Alloc>::AV_vector(size_t count, const T& value, const Alloc alloc) : alloc(alloc) {
+AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : alloc(alloc) {
     reserve(count);
     for (size_t i = 0; i < count; ++i)
     {
@@ -228,7 +238,7 @@ void AV_vector<T, Alloc>::reserve(size_t n)
 {
 
     if (n <= cap) return;
-    T* newarr = AllocTraits::allocate(alloc,n);
+    T* newarr = AllocTraits::allocate(alloc, n);
 
     try {
         std::uninitialized_copy(arr, arr + sz, newarr);
@@ -243,7 +253,7 @@ void AV_vector<T, Alloc>::reserve(size_t n)
         AllocTraits::destroy(alloc, arr + i);
     }
 
-    AllocTraits::deallocate(alloc, arr,n);
+    AllocTraits::deallocate(alloc, arr, n);
     arr = newarr;
     cap = n;
 
@@ -276,6 +286,7 @@ void AV_vector<T, Alloc>::emplace_back(const Args&... args)
     ++sz;
 }
 
+
 template<typename T, typename Alloc>
 void AV_vector<T, Alloc>::push_back(const T& value)
 {
@@ -305,7 +316,25 @@ void AV_vector<T, Alloc>::pop_back() {
 }
 
 template<typename T, typename Alloc>
+inline T& AV_vector<T, Alloc>::operator[](size_t i) const
+{
+    return arr[i];
+}
+
+template<typename T, typename Alloc>
+inline T& AV_vector<T, Alloc>::operator[](int i) const
+{
+    return arr[i];
+}
+
+template<typename T, typename Alloc>
 T& AV_vector<T, Alloc>::operator[](size_t i)
+{
+    return arr[i];
+}
+
+template<typename T, typename Alloc>
+inline T& AV_vector<T, Alloc>::operator[](int i)
 {
     return arr[i];
 }
@@ -344,6 +373,17 @@ typename AV_vector<T, Alloc>::iterator AV_vector<T, Alloc>::end() noexcept
 }
 
 template<typename T, typename Alloc>
+inline Iterator<T> AV_vector<T, Alloc>::erase(const_iterator pos) noexcept
+{   
+    assert(sz > 0);
+    size_t index = static_cast<size_t>(pos - begin());
+    std::move(begin() + index + 1, end(), begin() + index);
+    arr[sz - 1].~T();
+    --sz;
+    return begin() + index;
+}
+
+template<typename T, typename Alloc>
 typename AV_vector<T, Alloc>::const_iterator AV_vector<T, Alloc>::begin() const noexcept
 {
     return arr;
@@ -379,15 +419,3 @@ typename AV_vector<T, Alloc>::reverse_iterator AV_vector<T, Alloc>::rend() noexc
     return std::make_reverse_iterator(arr + sz);
 }
 
-
-int main()
-{
-    AV_vector<int> vec(5,5);
-    for (size_t i = 0; i < 10; i++)
-    {
-        vec.push_back(i);
-        std::cout << vec[i];
-    }
-
-    return 0;
-}
