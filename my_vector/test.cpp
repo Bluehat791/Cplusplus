@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include<functional>
 
 
 namespace {
 
+    // "����������" �����, ������������ ��� ������������ ������� �������
     inline const uint32_t DEFAULT_COOKIE = 0xdeadbeef;
 
     struct TestObj {
@@ -19,7 +21,7 @@ namespace {
         ~TestObj() {
             cookie = 0;
         }
-        bool IsAlive() const noexcept {
+        [[nodiscard]] bool IsAlive() const noexcept {
             return cookie == DEFAULT_COOKIE;
         }
         uint32_t cookie = DEFAULT_COOKIE;
@@ -362,6 +364,8 @@ void Test4() {
     {
         AV_vector<TestObj> v(1);
         assert(v.size() == v.capacity());
+        // �������� PushBack ������������� �������� ������� ������ ���� ���������
+        // ���� ��� ����������� ������
         v.push_back(v[0]);
         assert(v[0].IsAlive());
         assert(v[1].IsAlive());
@@ -369,6 +373,8 @@ void Test4() {
     {
         AV_vector<TestObj> v(1);
         assert(v.size() == v.capacity());
+        // �������� PushBack ��� ����������� ������������� �������� ������� ������ ���� ���������
+        // ���� ��� ����������� ������
         v.push_back(std::move(v[0]));
         assert(v[0].IsAlive());
         assert(v[1].IsAlive());
@@ -395,6 +401,8 @@ void Test4() {
 //    {
 //        AV_vector<TestObj> v(1);
 //        assert(v.size() == v.capacity());
+//        // �������� EmplaceBack ������������� �������� ������� ������ ���� ���������
+//        // ���� ��� ����������� ������
 //        v.emplace_back(v[0]);
 //        assert(v[0].IsAlive());
 //        assert(v[1].IsAlive());
@@ -644,18 +652,28 @@ void Benchmark() {
     }
 }
 
-int main() {
 
+void doTest(std::function<void()> test)
+{
     try {
-        Test1();
-        Test2();
-        Test3();
-        Test4();
-        //Test5();
-        //Test6();
-        Benchmark();
+        test();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
+        //throw;
     }
+}
+
+int main() {
+    
+    doTest(Test1);
+    doTest(Test2);
+    doTest(Test3);
+    doTest(Test4);
+
+
+
+    //Test5();
+    //Test6();
+    return 0;
 }

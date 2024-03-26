@@ -234,16 +234,39 @@ AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : alloc
 }
 
 template<typename T, typename Alloc>
+inline AV_vector<T, Alloc>::~AV_vector()
+{
+    for (size_t i = 0; i < sz; ++i)
+    {
+        AllocTraits::destroy(alloc, arr + i);
+    }
+
+    //AllocTraits::deallocate(alloc, arr, sz);
+    //delete arr;
+}
+
+template<typename T, typename Alloc>
 void AV_vector<T, Alloc>::reserve(size_t n)
 {
-
+    size_t i=0;
     if (n <= cap) return;
     T* newarr = AllocTraits::allocate(alloc, n);
 
     try {
-        std::uninitialized_copy(arr, arr + sz, newarr);
+        for (i = 0; i < sz; ++i)
+        {
+             AllocTraits::construct(alloc,newarr+i,std::move_if_noexcept(arr[i]));
+        }
+        //std::uninitialized_move(arr, arr + sz, newarr);
+
+        //std::uninitialized_copy(arr, arr + sz, newarr);
     }
     catch (...) {
+        for (size_t j = 0; j < i; ++j)
+        {
+            AllocTraits::destroy(alloc,newarr+j);
+        }
+        
         AllocTraits::deallocate(alloc, newarr, n);
         throw;
     }
