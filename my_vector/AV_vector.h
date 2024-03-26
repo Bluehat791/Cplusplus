@@ -17,7 +17,7 @@ public:
     using iterator_category = std::random_access_iterator_tag;
     // using iterator_concept = std::contiguous_iterator_tag;
 public:
-    explicit Iterator(T* ptr = nullptr);
+    Iterator(T* ptr = nullptr);
     Iterator(const Iterator& iterator);
 
     ~Iterator() = default;
@@ -119,7 +119,7 @@ bool Iterator<T>::operator>=(const Iterator& lhs)
 template <typename T>
 T& Iterator<T>::operator*()
 {
-    return date;
+    return *date;
 }
 
 
@@ -132,8 +132,9 @@ T& Iterator<T>::operator*()
 template <typename T, typename Alloc = std::allocator<T>>
 class AV_vector {
 public:
-    using iterator = Iterator<T>;
-    using const_iterator = Iterator<const T>;
+    //using iterator = Iterator<T>::date;
+    using iterator = T*;
+    using const_iterator = const T*;
     using reverse_iterator = std::reverse_iterator<Iterator<T>>;
     using const_reverse_iterator = std::reverse_iterator<Iterator<const T>>;
 
@@ -156,6 +157,21 @@ public:
     AV_vector(int size_m);
 
     AV_vector(size_t count, const T& value, const Alloc alloc = Alloc());
+
+    //copy contruct
+    AV_vector( AV_vector& av) ;
+
+    //move-construct
+    AV_vector(AV_vector&& av) noexcept;
+
+    //copy =
+    AV_vector& operator=(AV_vector& av) ;
+
+    //move =
+    AV_vector operator=(AV_vector&& av) noexcept;
+    ~AV_vector();
+
+
 
     void reserve(size_t n);
 
@@ -219,7 +235,8 @@ size_t AV_vector<T, Alloc>::capacity()
 
 template<typename T, typename Alloc>
 AV_vector<T, Alloc>::AV_vector(int size_m) : arr(nullptr), sz(size_m)
-{
+{   
+    reserve(sz);
     std::uninitialized_value_construct_n(arr, size_m);
 }
 
@@ -231,6 +248,62 @@ AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : alloc
         AllocTraits::construct(alloc, arr + i, value);
     }
 
+}
+
+template<typename T, typename Alloc>
+inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>& av) 
+{
+    reserve(av.size());
+    try {
+        std::uninitialized_copy(av.begin(), av.end(), arr);
+    }
+    catch (...) {
+        //~AV_vector<T,Alloc>();
+        //AllocTraits::deallocate(alloc, arr, sz);
+        throw;
+    }
+
+
+}
+
+template<typename T, typename Alloc>
+inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>&& av) noexcept
+    :arr(std::move( av.begin() )),sz(av.size()),cap(av.cap)
+{
+}
+
+template<typename T, typename Alloc>
+inline AV_vector<T,Alloc>& AV_vector<T, Alloc>::operator=(AV_vector<T,Alloc>& av) 
+{
+    reserve(av.size());
+    try {
+        std::uninitialized_copy(av.begin(), av.end(), arr);
+    }
+    catch (...) {
+        AllocTraits::deallocate(alloc, arr, sz);
+        throw;
+    }
+    this->sz = av.size();
+    this->cap = av.capacity();
+    return *this;
+}
+
+template<typename T, typename Alloc>
+inline AV_vector<T,Alloc> AV_vector<T, Alloc>::operator=(AV_vector<T, Alloc>&& av) noexcept
+{
+    if (arr != nullptr)
+    {
+        for (size_t i = 0; i < sz; ++i)
+        {
+            AllocTraits::destroy(alloc, arr + i);
+        }
+        AllocTraits::deallocate(alloc, arr, sz);
+    }
+
+    arr = std::move(av.begin());
+    this->sz = av.size();
+    this->cap = av.capacity();
+    return *this;
 }
 
 template<typename T, typename Alloc>
@@ -248,38 +321,30 @@ inline AV_vector<T, Alloc>::~AV_vector()
 template<typename T, typename Alloc>
 void AV_vector<T, Alloc>::reserve(size_t n)
 {
-    size_t i=0;
+
     if (n <= cap) return;
     T* newarr = AllocTraits::allocate(alloc, n);
 
-    try {
-        for (i = 0; i < sz; ++i)
-        {
-             AllocTraits::construct(alloc,newarr+i,std::move_if_noexcept(arr[i]));
+    if (arr != nullptr) {
+        try {
+            //std::uninitialized_copy(arr, arr + sz, newarr);
+            std::uninitialized_move(arr, arr + sz, newarr);
         }
-        //std::uninitialized_move(arr, arr + sz, newarr);
-
-        //std::uninitialized_copy(arr, arr + sz, newarr);
-    }
-    catch (...) {
-        for (size_t j = 0; j < i; ++j)
-        {
-            AllocTraits::destroy(alloc,newarr+j);
+        catch (...) {
+            AllocTraits::deallocate(alloc, newarr, n);
+            throw;
         }
-        
-        AllocTraits::deallocate(alloc, newarr, n);
-        throw;
+
+
+        for (size_t i = 0; i < sz; ++i)
+        {
+            AllocTraits::destroy(alloc, arr + i);
+        }
+        AllocTraits::deallocate(alloc, arr, n);
     }
 
-    for (size_t i = 0; i < sz; ++i)
-    {
-        AllocTraits::destroy(alloc, arr + i);
-    }
-
-    AllocTraits::deallocate(alloc, arr, n);
-    arr = newarr;
-    cap = n;
-
+        arr = newarr;
+        cap = n;
 }
 
 template<typename T, typename Alloc>
@@ -395,9 +460,11 @@ typename AV_vector<T, Alloc>::iterator AV_vector<T, Alloc>::end() noexcept
     return arr + sz;
 }
 
+
+
 template<typename T, typename Alloc>
-inline Iterator<T> AV_vector<T, Alloc>::erase(const_iterator pos) noexcept
-{   
+inline typename AV_vector<T, Alloc>::iterator AV_vector<T, Alloc>::erase(const_iterator pos) noexcept
+{
     assert(sz > 0);
     size_t index = static_cast<size_t>(pos - begin());
     std::move(begin() + index + 1, end(), begin() + index);
@@ -441,4 +508,5 @@ typename AV_vector<T, Alloc>::reverse_iterator AV_vector<T, Alloc>::rend() noexc
 {
     return std::make_reverse_iterator(arr + sz);
 }
+
 
