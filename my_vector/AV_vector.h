@@ -134,6 +134,7 @@ class AV_vector {
 public:
     //using iterator = Iterator<T>::date;
     using iterator = T*;
+    using reference = AV_vector<T,Alloc>&;
     using const_iterator = const T*;
     using reverse_iterator = std::reverse_iterator<Iterator<T>>;
     using const_reverse_iterator = std::reverse_iterator<Iterator<const T>>;
@@ -178,7 +179,7 @@ public:
     void resize(size_t n, const T& value = T());
 
     template<typename... Args>
-    void emplace_back(const Args&... args);
+    AV_vector emplace_back(const Args&... args);
 
     void push_back(const T& value);
 
@@ -241,7 +242,8 @@ AV_vector<T, Alloc>::AV_vector(int size_m) : arr(nullptr), sz(size_m)
 }
 
 template<typename T, typename Alloc>
-AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : alloc(alloc) {
+AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : 
+alloc(alloc),sz(count) {
     reserve(count);
     for (size_t i = 0; i < count; ++i)
     {
@@ -259,7 +261,7 @@ inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>& av)
     }
     catch (...) {
         //~AV_vector<T,Alloc>();
-        //AllocTraits::deallocate(alloc, arr, sz);
+        AllocTraits::deallocate(alloc, arr, sz);
         throw;
     }
 
@@ -270,6 +272,8 @@ template<typename T, typename Alloc>
 inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>&& av) noexcept
     :arr(std::move( av.begin() )),sz(av.size()),cap(av.cap)
 {
+    av.sz = 0;
+    av.cap = 0;
 }
 
 template<typename T, typename Alloc>
@@ -324,7 +328,7 @@ void AV_vector<T, Alloc>::reserve(size_t n)
 
     if (n <= cap) return;
     T* newarr = AllocTraits::allocate(alloc, n);
-
+    
     if (arr != nullptr) {
         try {
             //std::uninitialized_copy(arr, arr + sz, newarr);
@@ -357,6 +361,11 @@ void AV_vector<T, Alloc>::resize(size_t n, const T& value)
 
     }
     if (n < sz) {
+        for (size_t i = n; i < this->size(); i++)
+        {
+            AllocTraits::destroy(alloc,arr+i);
+        }
+        
         sz = n;
     }
 
@@ -364,7 +373,7 @@ void AV_vector<T, Alloc>::resize(size_t n, const T& value)
 
 template<typename T, typename Alloc>
 template<typename... Args>
-void AV_vector<T, Alloc>::emplace_back(const Args&... args)
+AV_vector<T, Alloc> AV_vector<T, Alloc>::emplace_back(const Args&... args)
 {
     if (cap == sz)
     {
@@ -372,6 +381,7 @@ void AV_vector<T, Alloc>::emplace_back(const Args&... args)
     }
     AllocTraits::construct(alloc, arr + sz, std::forward<Args>(args)...);
     ++sz;
+    return *this;
 }
 
 
