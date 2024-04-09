@@ -1,0 +1,9 @@
+[submodule "my_vector/external/googletest"]
+	path = my_vector/external/googletest
+	url = http://github.com/google/googletest
+[submodule "test_edu/googletest"]
+	path = test_edu/googletest
+	url = http://github.com/google/googletest
+[submodule "my_list/googletest"]
+	path = my_list/googletest
+	url = https://github.com/google/googletest
