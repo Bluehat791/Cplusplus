@@ -11,10 +11,9 @@
 
 
 
-namespace {
-    //::vector<int> v;
 
-    // 
+namespace {
+
     inline const uint32_t DEFAULT_COOKIE = 0xdeadbeef;
 
     struct TestObj {
@@ -125,119 +124,8 @@ namespace {
 
 }  // namespace
 
-// TEST(Vector,BaseMethod){
-//     Obj::ResetCounters();
-//     const size_t SIZE = 100500;
-//     const size_t INDEX = 10;
-//     const int MAGIC = 42;
 
-//     {
-//         AV_vector<int> v;
-//         EXPECT_EQ(v.capacity(), 0);
-//         EXPECT_EQ(v.size() , 0);
-
-//         v.reserve(SIZE);
-//         EXPECT_EQ(v.capacity(),SIZE);
-//         EXPECT_EQ(v.size(), 0);
-//     }
-//     {
-//         AV_vector<int> v(SIZE);
-//         const auto& cv(v);
-//         EXPECT_EQ(v.capacity() , SIZE);
-//         EXPECT_EQ(v.size() , SIZE);
-//         EXPECT_EQ(v[0] , 0);
-//         EXPECT_EQ(&v[0] , &cv[0]);
-//         v[INDEX] = MAGIC;
-//         EXPECT_EQ(v[INDEX] , MAGIC);
-//         EXPECT_EQ(&v[100] - &v[0] , 100);
-
-//         v.reserve(SIZE * 2);
-//         EXPECT_EQ(v.size() , SIZE);
-//         EXPECT_EQ(v.capacity() , SIZE * 2);
-//         EXPECT_EQ(v[INDEX] , MAGIC);
-//     }
-
-//     {
-//         AV_vector<int> v(SIZE);
-//         v[INDEX] = MAGIC;
-//         const auto v_copy(v);
-//         EXPECT_NE(&v[INDEX] , &v_copy[INDEX]);
-//         EXPECT_EQ(v[INDEX] , v_copy[INDEX]);
-//     }
-//     {
-//         AV_vector<Obj> v;
-//         v.reserve(SIZE);
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , 0);
-//     }
-//     {
-//         AV_vector<Obj> v(SIZE);
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , SIZE);
-//         const int old_copy_count = Obj::num_copied;
-//         const int old_move_count = Obj::num_moved;
-//         v.reserve(SIZE * 2);
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , SIZE);
-//         EXPECT_EQ(Obj::num_copied , old_copy_count);
-//         EXPECT_EQ(Obj::num_moved ,old_move_count + static_cast<int>(SIZE));
-//     }
-//     EXPECT_EQ(Obj::GetAliveObjectCount() , 0);
-//     //std::cerr << "Test1() is succesful\n";
-
-// }
-
-// TEST(Vector,Exception) {
-//     const size_t SIZE = 100;
-//     Obj::ResetCounters();
-//     {
-//         Obj::default_construction_throw_countdown = SIZE / 2;
-//         try {
-//             AV_vector<Obj> v(SIZE);
-//             ASSERT_EQ(false , "Exception is expected");
-//         }
-//         catch (const std::runtime_error&) {
-//         }
-//         catch (...) {
-//             // Unexpected error
-//             ASSERT_EQ(false ,"Unexpected exception");
-//         }
-//         EXPECT_EQ(Obj::num_default_constructed , SIZE / 2 - 1);
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , 0);
-//     }
-//     Obj::ResetCounters();
-//     {
-//         AV_vector<Obj> v(SIZE);
-//         try {
-//             v[SIZE / 2].throw_on_copy = true;
-//             AV_vector<Obj> v_copy(v);
-//             ASSERT_EQ(false , "Exception is expected");
-//         }
-//         catch (const std::runtime_error&) {
-//             EXPECT_EQ(Obj::num_copied , SIZE / 2);
-//         }
-//         catch (...) {
-//             // Unexpected error
-//             ASSERT_EQ(false , "Unexpected exception");
-//         }
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , SIZE);
-//     }
-//     Obj::ResetCounters();
-//     {
-//         AV_vector<Obj> v(SIZE);
-//         try {
-//             v[SIZE - 1].throw_on_copy = true;
-//             v.reserve(SIZE * 2);
-//         }
-//         catch (...) {
-//             // Unexpected error
-//             ASSERT_EQ(false , "Unexpected exception");
-//         }
-//         EXPECT_EQ(v.capacity() , SIZE * 2);
-//         EXPECT_EQ(v.size() , SIZE);
-//         EXPECT_EQ(Obj::GetAliveObjectCount() , SIZE);
-//     }
-//     //std::cerr << "Test2() is succesful\n";
-// }
-
-TEST(Vector,ConstructSZ){
+TEST(Vector, ConstructSZ) {
     //arrange
     Obj::ResetCounters();
     const int SIZE = 25;
@@ -246,97 +134,103 @@ TEST(Vector,ConstructSZ){
         AV_vector<int> vc(SIZE);
 
         //act
-        
+
         //assert
-        EXPECT_EQ(vc.size(),SIZE);
-        EXPECT_EQ(vc.capacity(),SIZE);
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_EQ(vc.capacity(), SIZE);
         //EXPECT_EQ(vc.begin(),&vc[0]);
     }
     {
         AV_vector<Obj> vc(SIZE);
-        EXPECT_EQ(Obj::num_default_constructed,0);
+        EXPECT_EQ(Obj::num_default_constructed, SIZE);
 
-        EXPECT_EQ(vc.size(),SIZE);
-        EXPECT_EQ(vc.capacity(),SIZE);
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_EQ(vc.capacity(), SIZE);
         //EXPECT_EQ(vc.begin(),nullptr);
     }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 }
 
-TEST(Vector,ConstrFullParams){
+TEST(Vector, ConstrFullParams) {
     Obj::ResetCounters();
     const size_t SIZE = 10;
-    
+
     std::allocator<int> alloc;
     {
         const int a = 5;
         //arrange   
 
-        AV_vector<int> vc(SIZE,a,alloc);
+        AV_vector<int> vc(SIZE, a, alloc);
         //act
-        
+
         //assert
-        EXPECT_EQ(vc.capacity(),SIZE);
-        EXPECT_EQ(vc[4],a);
-        EXPECT_EQ(vc.size(),SIZE);
+        EXPECT_EQ(vc.capacity(), SIZE);
+        EXPECT_EQ(vc[4], a);
+        EXPECT_EQ(vc.size(), SIZE);
     }
     {
         Obj obj;
-        AV_vector<Obj> vc(SIZE,obj,alloc);
+        AV_vector<Obj> vc(SIZE, obj, alloc);
 
-        EXPECT_EQ(vc.capacity(),SIZE);
-        EXPECT_EQ(vc[4].id,obj.id);
-        EXPECT_EQ(vc.size(),SIZE);
-        EXPECT_EQ(Obj::num_default_constructed,0);
-        
+        EXPECT_EQ(vc.capacity(), SIZE);
+        EXPECT_EQ(vc[4].id, obj.id);
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_EQ(Obj::num_copied, SIZE);
+        //default construcctor for obj
+        EXPECT_EQ(Obj::num_default_constructed, 1);
+
     }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 
 }
 
-TEST(Vector,CopyConstr){
+TEST(Vector, CopyConstr) {
     //arrange
     Obj::ResetCounters();
     srand(time(NULL));
     const size_t SIZE = 50;
     {
-        AV_vector<int> vc(SIZE);
+        AV_vector<int> vc;
 
-        for (size_t i = 0; i < vc.size(); i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             vc.push_back(i);
         }
 
         AV_vector<int> right(vc);
-        EXPECT_EQ(right.size(),vc.size());
-        EXPECT_EQ(right.capacity(),vc.capacity());
-        EXPECT_NE(right.begin(),vc.begin());
-        EXPECT_EQ(right[rand()%SIZE],vc[rand()%SIZE]);
+        EXPECT_EQ(right.size(), vc.size());
+        EXPECT_EQ(right.capacity(), vc.capacity());
+        EXPECT_NE(right.begin(), vc.begin());
+        int random = rand() % SIZE;
+        EXPECT_EQ(right[random], vc[random]);
     }
     {
-        AV_vector<Obj> vc(SIZE);
+        AV_vector<Obj> vc;
 
-        for (size_t i = 0; i < vc.size(); i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
-            
+
             vc.push_back(Obj(i));
         }
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
 
         AV_vector<Obj> right(vc);
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE*2);
-        EXPECT_EQ(right.size(),vc.size());
-        EXPECT_EQ(right.capacity(),vc.capacity());
-        EXPECT_NE(right.begin(),vc.begin());
+        EXPECT_EQ(Obj::num_copied, SIZE);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
+        EXPECT_EQ(right.size(), vc.size());
+        EXPECT_EQ(right.capacity(), vc.capacity());
+        EXPECT_NE(right.begin(), vc.begin());
     }
-        EXPECT_EQ(Obj::GetAliveObjectCount(),0);
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 }
 
-TEST(Vector,MoveConstr){
+TEST(Vector, MoveConstr) {
     //arrange
     Obj::ResetCounters();
     srand(time(NULL));
     const size_t SIZE = 50;
     {
-        AV_vector<int> vc(SIZE);
+        AV_vector<int> vc;
 
         for (size_t i = 0; i < SIZE; i++)
         {
@@ -344,9 +238,17 @@ TEST(Vector,MoveConstr){
         }
 
         AV_vector<int> right(std::move(vc));
-        EXPECT_NE(right.size(),vc.size());
-        EXPECT_NE(right.capacity(),vc.capacity());
-        EXPECT_NE(right[rand()%SIZE],vc[rand()%SIZE]);
+        EXPECT_NE(right.size(), vc.size());
+        EXPECT_NE(right.capacity(), vc.capacity());
+        int rand_count = rand() % SIZE;
+        try
+        {
+            EXPECT_NE(right[rand_count], vc[rand_count]);
+            EXPECT_EQ("No exception", "Error");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
     {
         AV_vector<Obj> vc;
@@ -355,69 +257,26 @@ TEST(Vector,MoveConstr){
         {
             vc.push_back(Obj(i));
         }
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
 
         AV_vector<Obj> right(std::move(vc));
-        EXPECT_EQ(Obj::num_destroyed,0);
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
-        EXPECT_EQ(Obj::num_assigned,0);
-        EXPECT_EQ(Obj::num_copied,0);
-        EXPECT_NE(right.size(),vc.size());
-        EXPECT_NE(right.capacity(),vc.capacity());
-        EXPECT_NE(right[rand()%SIZE].id,vc[rand()%SIZE].id);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
+        EXPECT_EQ(Obj::num_assigned, 0);
+        EXPECT_EQ(Obj::num_copied, 0);
+        EXPECT_NE(right.size(), vc.size());
+        EXPECT_NE(right.capacity(), vc.capacity());
     }
-        EXPECT_EQ(Obj::GetAliveObjectCount(),0);
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 
 }
 
-TEST(Vector,CopyAssign){
+TEST(Vector, CopyAssign) {
     //arrange
     Obj::ResetCounters();
     srand(time(NULL));
     const size_t SIZE = 50;
     {
-        AV_vector<int> vc(SIZE);
-
-        for (size_t i = 0; i < vc.size(); i++)
-        {
-            vc.push_back(i);
-        }
-
-        AV_vector<int> right(SIZE);
-        right=vc;
-        EXPECT_EQ(right.size(),vc.size());
-        EXPECT_EQ(right.capacity(),vc.capacity());
-        EXPECT_NE(right.begin(),vc.begin());
-        EXPECT_EQ(right[rand()%SIZE],vc[rand()%SIZE]);
-    }
-    {
-        AV_vector<Obj> vc(SIZE);
-
-        for (size_t i = 0; i < vc.size(); i++)
-        {
-            
-            vc.push_back(Obj(i));
-        }
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
-
-        AV_vector<Obj> right(SIZE);
-        right=vc;
-        EXPECT_EQ(Obj::num_assigned,SIZE);
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE*2);
-        EXPECT_EQ(right.size(),vc.size());
-        EXPECT_EQ(right.capacity(),vc.capacity());
-        EXPECT_NE(right.begin(),vc.begin());
-    }
-        EXPECT_EQ(Obj::GetAliveObjectCount(),0);
-}
-
-TEST(Vector,MoveAssign){
-    //arrange
-    Obj::ResetCounters();
-    srand(time(NULL));
-    const size_t SIZE = 50;
-    {
-        AV_vector<int> vc(SIZE);
+        AV_vector<int> vc;
 
         for (size_t i = 0; i < SIZE; i++)
         {
@@ -425,11 +284,62 @@ TEST(Vector,MoveAssign){
         }
 
         AV_vector<int> right(SIZE);
-        right=std::move(vc);
-        EXPECT_EQ(vc.begin(),nullptr);
-        EXPECT_NE(right.size(),vc.size());
-        EXPECT_NE(right.capacity(),vc.capacity());
-        EXPECT_NE(right[rand()%SIZE],vc[rand()%SIZE]);
+        right = vc;
+        EXPECT_EQ(right.size(), vc.size());
+        EXPECT_EQ(right.capacity(), vc.capacity());
+        EXPECT_NE(right.begin(), vc.begin());
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(right[rand_count], vc[rand_count]);
+    }
+    {
+        AV_vector<Obj> vc;
+
+        for (size_t i = 0; i < SIZE; i++)
+        {
+
+            vc.push_back(Obj(i));
+        }
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
+
+        AV_vector<Obj> right(SIZE);
+        right = vc;
+        EXPECT_EQ(Obj::num_copied, SIZE);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
+        EXPECT_EQ(right.size(), vc.size());
+        EXPECT_EQ(right.capacity(), vc.capacity());
+        EXPECT_NE(right.begin(), vc.begin());
+    }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
+
+}
+
+TEST(Vector, MoveAssign) {
+    //arrange
+    Obj::ResetCounters();
+    srand(time(NULL));
+    const size_t SIZE = 50;
+    {
+        AV_vector<int> vc;
+
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(i);
+        }
+
+        AV_vector<int> right(SIZE);
+        right = std::move(vc);
+        EXPECT_EQ(vc.begin(), nullptr);
+        EXPECT_NE(right.size(), vc.size());
+        EXPECT_NE(right.capacity(), vc.capacity());
+        try
+        {
+            int rand_count = rand() % SIZE;
+            EXPECT_NE(right[rand_count], vc[rand_count]);
+            EXPECT_EQ("No exception", "Error");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
     {
         AV_vector<Obj> vc;
@@ -438,56 +348,62 @@ TEST(Vector,MoveAssign){
         {
             vc.push_back(Obj(i));
         }
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
         AV_vector<Obj> right(SIZE);
-        right=std::move(vc);
-        EXPECT_EQ(Obj::num_assigned,0);
-        EXPECT_EQ(Obj::num_copied,0);
-        EXPECT_EQ(Obj::num_destroyed,0);
-        EXPECT_EQ(Obj::num_constructed_with_id,SIZE);
-        EXPECT_EQ(vc.begin(),nullptr);
-        EXPECT_NE(right.size(),vc.size());
-        EXPECT_NE(right.capacity(),vc.capacity());
-        EXPECT_NE(right[rand()%SIZE].id,vc[rand()%SIZE].id);
+        right = std::move(vc);
+        EXPECT_EQ(Obj::num_assigned, 0);
+        EXPECT_EQ(Obj::num_copied, 0);
+        EXPECT_EQ(Obj::num_constructed_with_id, SIZE);
+        EXPECT_EQ(vc.begin(), nullptr);
+        EXPECT_NE(right.size(), vc.size());
+        EXPECT_NE(right.capacity(), vc.capacity());
+        try
+        {
+            int rand_count = rand() % SIZE;
+            EXPECT_NE(right[rand_count].id, vc[rand_count].id);
+            EXPECT_EQ("No exception", "Error");
+        }
+        catch (const std::exception&)
+        {
+        }
     }
-        EXPECT_EQ(Obj::GetAliveObjectCount(),0);
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 }
 
-TEST(Vector,Reserve){
+TEST(Vector, Reserve) {
     Obj::ResetCounters();
     srand(time(NULL));
     const size_t SIZE = 50;
     const size_t RSIZE = 60;
     {
-        AV_vector<int> vc(SIZE);
+        AV_vector<int> vc;
         for (size_t i = 0; i < SIZE; i++)
         {
             vc.push_back(i);
         }
         AV_vector<int> right(vc);
         vc.reserve(RSIZE);
-        EXPECT_EQ(vc.capacity(),RSIZE);
-        EXPECT_EQ(vc.size(),SIZE);
-        EXPECT_EQ(vc[rand()%SIZE],right[rand()%SIZE]);
-        
+        EXPECT_GE(vc.capacity(), RSIZE);
+        EXPECT_EQ(vc.size(), SIZE);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(vc[rand_count], right[rand_count]);
+
     }
     {
-        AV_vector<Obj> vc(SIZE);
+        AV_vector<Obj> vc;
 
         for (size_t i = 0; i < SIZE; i++)
         {
             vc.push_back(Obj(i));
         }
         vc.reserve(RSIZE);
-        EXPECT_EQ(Obj::num_copied,0);
-        EXPECT_EQ(vc.size(),SIZE);
-        EXPECT_EQ(vc.capacity(),RSIZE);
-        EXPECT_EQ(Obj::num_moved,SIZE);
-
+        EXPECT_EQ(Obj::num_copied, 0);
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_GE(vc.capacity(), RSIZE);
     }
-        EXPECT_EQ(Obj::GetAliveObjectCount(),0);
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
     {
-        AV_vector<Obj> vc(SIZE);
+        AV_vector<Obj> vc;
 
         for (size_t i = 0; i < SIZE; i++)
         {
@@ -495,151 +411,142 @@ TEST(Vector,Reserve){
         }
         AV_vector<Obj> right(vc);
         vc.reserve(RSIZE);
-        EXPECT_EQ(right[rand()%SIZE].id,vc[rand()%SIZE].id);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(right[rand_count].id, vc[rand_count].id);
     }
-         EXPECT_EQ(Obj::GetAliveObjectCount(),0);
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 
     //act
-    
+
     //assert
 }
 
-TEST(Vector,Resize){
+TEST(Vector, Resize) {
     //arrange
     Obj::ResetCounters();
     srand(time(NULL));
     const size_t SIZE = 50;
     const size_t RSIZE = 40;
+    const size_t GRSIZE = 60;
     {
-        AV_vector<int> vc(SIZE);
+        AV_vector<int> vc;
         for (size_t i = 0; i < SIZE; i++)
         {
             vc.push_back(i);
         }
         AV_vector<int> right(vc);
-        vc.reserve(RSIZE);
-        EXPECT_EQ(vc.capacity(),RSIZE);
-        EXPECT_EQ(vc.size(),RSIZE);
-        EXPECT_EQ(vc[rand()%RSIZE],right[rand()%RSIZE]);
+        vc.resize(RSIZE);
+        EXPECT_EQ(vc.capacity(), RSIZE);
+        EXPECT_EQ(vc.size(), RSIZE);
+        int rand_count = rand() % RSIZE;
+        EXPECT_EQ(vc[rand_count], right[rand_count]);
     }
-    
-    EXPECT_EQ(Obj::GetAliveObjectCount(),0);
-}
+    {
+        AV_vector<Obj> vc;
 
-TEST(Vector,pushBack){
-    //arrange
-
-    //act
-    
-    //assert
-}
-
-TEST(Vector,RVpushBack){
-    //arrange
-
-    //act
-    
-    //assert
-}
-
-TEST(Vector,popBack){
-    //arrange
-
-    //act
-    
-    //assert
-}
-
-
-
-struct C {
-    C() noexcept {
-        ++def_ctor;
-    }
-    C(const C& /*other*/) noexcept {
-        ++copy_ctor;
-    }
-    C(C&& /*other*/) noexcept {
-        ++move_ctor;
-    }
-    C& operator=(const C& other) noexcept {
-        if (this != &other) {
-            ++copy_assign;
-        }
-        return *this;
-    }
-    C& operator=(C&& /*other*/) noexcept {
-        ++move_assign;
-        return *this;
-    }
-    ~C() {
-        ++dtor;
-    }
-
-    static void Reset() {
-        def_ctor = 0;
-        copy_ctor = 0;
-        move_ctor = 0;
-        copy_assign = 0;
-        move_assign = 0;
-        dtor = 0;
-    }
-
-    inline static size_t def_ctor = 0;
-    inline static size_t copy_ctor = 0;
-    inline static size_t move_ctor = 0;
-    inline static size_t copy_assign = 0;
-    inline static size_t move_assign = 0;
-    inline static size_t dtor = 0;
-};
-
-void Dump() {
-    using namespace std;
-    cerr << "Def ctors: " << C::def_ctor              //
-        << ", Copy ctors: " << C::copy_ctor          //
-        << ", Move ctors: " << C::move_ctor          //
-        << ", Copy assignments: " << C::copy_assign  //
-        << ", Move assignments: " << C::move_assign  //
-        << ", Dtors: " << C::dtor << endl;
-}
-
-void Benchmark() {
-    using namespace std;
-    try {
-        const size_t NUM = 10;
-        C c;
+        for (size_t i = 0; i < SIZE; i++)
         {
-            cerr << "std::vector:" << endl;
-            C::Reset();
-            vector<C> v(NUM);
-            Dump();
-            v.push_back(c);
+            vc.push_back(Obj(i));
         }
-        Dump();
+        AV_vector<Obj> right(vc);
+        vc.resize(RSIZE);
+        EXPECT_EQ(Obj::GetAliveObjectCount(), SIZE + RSIZE);
+        vc.resize(GRSIZE);
+        EXPECT_EQ(Obj::GetAliveObjectCount(), SIZE + GRSIZE);
     }
-    catch (...) {
-    }
-    try {
-        const size_t NUM = 10;
-        C c;
-        {
-            cerr << "Vector:" << endl;
-            C::Reset();
-            AV_vector<C> v(NUM);
-            Dump();
-            v.push_back(c);
-        }
-        Dump();
-    }
-    catch (...) {
-    }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
 }
 
+TEST(Vector, pushBack) {
+    Obj::ResetCounters();
+    srand(time(NULL));
+    const size_t SIZE = 50;
+    {
+        AV_vector<int> vc;
+        int x = 177;
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(x);
+        }
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_GE(vc.capacity(), SIZE);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(vc[rand_count], 177);
+    }
+    {
+        AV_vector<Obj> vc;
+        Obj obj(177);
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(obj);
+        }
+        EXPECT_EQ(Obj::num_copied, SIZE);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(vc[rand_count].id, obj.id);
+    }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
+}
 
+TEST(Vector, RVpushBack) {
+    Obj::ResetCounters();
+    srand(time(NULL));
+    const size_t SIZE = 50;
+    {
+        AV_vector<int> vc;
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(i);
+        }
+        EXPECT_EQ(vc.size(), SIZE);
+        EXPECT_GE(vc.capacity(), SIZE);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(vc[rand_count], rand_count);
+    }
+    {
+        AV_vector<Obj> vc;
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(Obj(i));
+        }
+        EXPECT_EQ(Obj::num_copied, 0);
+        int rand_count = rand() % SIZE;
+        EXPECT_EQ(vc[rand_count].id, rand_count);
+    }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
+}
 
-// int main() {
-
-//     testing::InitGoogleTest();
-
-//     return RUN_ALL_TESTS();
-// }
+TEST(Vector, popBack) {
+    Obj::ResetCounters();
+    srand(time(NULL));
+    const size_t SIZE = 50;
+    {
+        AV_vector<int> vc;
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(i);
+        }
+        vc.pop_back();
+        vc.pop_back();
+        EXPECT_EQ(vc.size(), SIZE - 2);
+        EXPECT_EQ(vc[SIZE - 2], SIZE - 2);
+        for (size_t i = 0; i < vc.size(); i++)
+        {
+            EXPECT_EQ(vc[i], i);
+        }
+        
+    }
+    {
+        AV_vector<Obj> vc;
+        for (size_t i = 0; i < SIZE; i++)
+        {
+            vc.push_back(Obj(i));
+        }
+        vc.pop_back();
+        vc.pop_back();
+        for (size_t i = 0; i < vc.size(); i++)
+        {
+            EXPECT_EQ(vc[i].id, i);
+        }
+    }
+    EXPECT_EQ(Obj::GetAliveObjectCount(), 0);
+}

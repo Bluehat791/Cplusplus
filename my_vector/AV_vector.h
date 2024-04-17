@@ -123,18 +123,13 @@ T& Iterator<T>::operator*()
 }
 
 
-
-
-
-
-
 //-----------------------------------------------
 template <typename T, typename Alloc = std::allocator<T>>
 class AV_vector {
 public:
     //using iterator = Iterator<T>::date;
     using iterator = T*;
-    using reference = AV_vector<T,Alloc>&;
+    using reference = AV_vector<T, Alloc>&;
     using const_iterator = const T*;
     using reverse_iterator = std::reverse_iterator<Iterator<T>>;
     using const_reverse_iterator = std::reverse_iterator<Iterator<const T>>;
@@ -153,23 +148,23 @@ public:
 
     size_t capacity();
 
-    AV_vector() = default;
+    AV_vector();
 
     AV_vector(int size_m);
 
     AV_vector(size_t count, const T& value, const Alloc alloc = Alloc());
 
     //copy contruct
-    AV_vector( AV_vector& av) ;
+    AV_vector(AV_vector& av);
 
     //move-construct
     AV_vector(AV_vector&& av) noexcept;
 
     //copy =
-    AV_vector& operator=(AV_vector& av) ;
+    AV_vector& operator=(AV_vector& av);
 
     //move =
-    AV_vector operator=(AV_vector&& av) noexcept;
+    AV_vector& operator=(AV_vector&& av) noexcept;
     ~AV_vector();
 
 
@@ -235,15 +230,21 @@ size_t AV_vector<T, Alloc>::capacity()
 }
 
 template<typename T, typename Alloc>
-AV_vector<T, Alloc>::AV_vector(int size_m) : arr(nullptr), sz(size_m)
-{   
+inline AV_vector<T, Alloc>::AV_vector()
+    : arr(nullptr), sz(0), cap(0)
+{
+}
+
+template<typename T, typename Alloc>
+AV_vector<T, Alloc>::AV_vector(int size_m) : arr(nullptr), sz(size_m), cap(0)
+{
     reserve(sz);
     std::uninitialized_value_construct_n(arr, size_m);
 }
 
 template<typename T, typename Alloc>
-AV_vector<T, Alloc>::AV_vector(size_t count, const T& value,Alloc alloc) : 
-alloc(alloc),sz(count) {
+AV_vector<T, Alloc>::AV_vector(size_t count, const T& value, Alloc alloc) :
+    alloc(alloc), sz(count),cap(0),arr(nullptr) {
     reserve(count);
     for (size_t i = 0; i < count; ++i)
     {
@@ -253,9 +254,10 @@ alloc(alloc),sz(count) {
 }
 
 template<typename T, typename Alloc>
-inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>& av) 
+inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>& av)
+    : arr(nullptr),sz(0),cap(0)
 {
-    reserve(av.size());
+    reserve(av.capacity());
     try {
         std::uninitialized_copy(av.begin(), av.end(), arr);
     }
@@ -265,20 +267,26 @@ inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>& av)
         throw;
     }
 
-
+    sz = av.size();
 }
 
 template<typename T, typename Alloc>
 inline AV_vector<T, Alloc>::AV_vector(AV_vector<T, Alloc>&& av) noexcept
-    :arr(std::move( av.begin() )),sz(av.size()),cap(av.cap)
+    :arr(std::move(av.begin())), sz(av.size()), cap(av.cap)
 {
+    av.arr = nullptr;
     av.sz = 0;
     av.cap = 0;
 }
 
 template<typename T, typename Alloc>
-inline AV_vector<T,Alloc>& AV_vector<T, Alloc>::operator=(AV_vector<T,Alloc>& av) 
+inline AV_vector<T, Alloc>& AV_vector<T, Alloc>::operator=(AV_vector<T, Alloc>& av)
 {
+    for (size_t i = 0; i < sz; ++i)
+    {
+        AllocTraits::destroy(alloc, arr + i);
+    }
+   /* AllocTraits::deallocate(alloc, arr, sz);*/
     reserve(av.size());
     try {
         std::uninitialized_copy(av.begin(), av.end(), arr);
@@ -293,7 +301,7 @@ inline AV_vector<T,Alloc>& AV_vector<T, Alloc>::operator=(AV_vector<T,Alloc>& av
 }
 
 template<typename T, typename Alloc>
-inline AV_vector<T,Alloc> AV_vector<T, Alloc>::operator=(AV_vector<T, Alloc>&& av) noexcept
+inline AV_vector<T, Alloc>& AV_vector<T, Alloc>::operator=(AV_vector<T, Alloc>&& av) noexcept
 {
     if (arr != nullptr)
     {
@@ -304,9 +312,14 @@ inline AV_vector<T,Alloc> AV_vector<T, Alloc>::operator=(AV_vector<T, Alloc>&& a
         AllocTraits::deallocate(alloc, arr, sz);
     }
 
+
     arr = std::move(av.begin());
-    this->sz = av.size();
-    this->cap = av.capacity();
+    sz = av.size();
+    cap = av.capacity();
+    av.sz = 0;
+    av.cap = 0;
+    av.arr = nullptr;
+
     return *this;
 }
 
@@ -328,7 +341,7 @@ void AV_vector<T, Alloc>::reserve(size_t n)
 
     if (n <= cap) return;
     T* newarr = AllocTraits::allocate(alloc, n);
-    
+
     if (arr != nullptr) {
         try {
             //std::uninitialized_copy(arr, arr + sz, newarr);
@@ -347,8 +360,9 @@ void AV_vector<T, Alloc>::reserve(size_t n)
         AllocTraits::deallocate(alloc, arr, n);
     }
 
-        arr = newarr;
-        cap = n;
+    arr = newarr;
+    cap = n;
+
 }
 
 template<typename T, typename Alloc>
@@ -363,12 +377,13 @@ void AV_vector<T, Alloc>::resize(size_t n, const T& value)
     if (n < sz) {
         for (size_t i = n; i < this->size(); i++)
         {
-            AllocTraits::destroy(alloc,arr+i);
+            AllocTraits::destroy(alloc, arr + i);
         }
-        
-        sz = n;
-    }
 
+        sz = n;
+        cap = n;
+    }
+    sz = cap;
 }
 
 template<typename T, typename Alloc>
@@ -388,8 +403,10 @@ AV_vector<T, Alloc> AV_vector<T, Alloc>::emplace_back(const Args&... args)
 template<typename T, typename Alloc>
 void AV_vector<T, Alloc>::push_back(const T& value)
 {
-    if (cap == sz)
-    {
+    if ((cap == sz) && sz == 0) {
+        reserve(2);
+    }
+    else if (cap == sz) {
         reserve(2 * sz);
     }
     new(arr + sz) T(value);
@@ -399,8 +416,9 @@ void AV_vector<T, Alloc>::push_back(const T& value)
 template<typename T, typename Alloc>
 void AV_vector<T, Alloc>::push_back(T&& value)
 {
-    if (cap == sz)
-    {
+    if ((cap == sz) && sz == 0) {
+        reserve(2);
+    } else if (cap == sz) {
         reserve(2 * sz);
     }
     new(arr + sz) T(std::move(value));
@@ -416,24 +434,32 @@ void AV_vector<T, Alloc>::pop_back() {
 template<typename T, typename Alloc>
 inline T& AV_vector<T, Alloc>::operator[](size_t i) const
 {
+    if (i > size())
+        throw std::out_of_range("...");
     return arr[i];
 }
 
 template<typename T, typename Alloc>
 inline T& AV_vector<T, Alloc>::operator[](int i) const
 {
+    if (i > size())
+        throw std::out_of_range("...");
     return arr[i];
 }
 
 template<typename T, typename Alloc>
 T& AV_vector<T, Alloc>::operator[](size_t i)
 {
+    if (i > size())
+        throw std::out_of_range("...");
     return arr[i];
 }
 
 template<typename T, typename Alloc>
 inline T& AV_vector<T, Alloc>::operator[](int i)
 {
+    if (i > size())
+        throw std::out_of_range("...");
     return arr[i];
 }
 
